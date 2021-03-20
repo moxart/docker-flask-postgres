@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+
+  flask:
+    build:
+      context: ./flask
+      dockerfile: Dockerfile.prod
+    container_name: flask-app-prod
+    restart: always
+    env_file:
+      - ./flask/.env.prod
+    command: gunicorn --bind 0.0.0.0:5000 app:app
+    links:
+      - postgres
+    depends_on:
+      - postgres
+    networks:
+      - flask-network-prod
+
+  postgres:
+    image: postgres:12-alpine
+    container_name: flask-postgres-prod
+    restart: always
+    volumes:
+      - ./postgres_data_prod:/var/lib/postgresql/data/
+    networks:
+      - flask-network-prod
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: flask-nginx-prod
+    ports:
+      - 8000:80
+    depends_on:
+      - flask
+    networks:
+      - flask-network-prod
+
+networks:
+  flask-network-prod:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
+    external: true

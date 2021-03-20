@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+
+  flask:
+    build:
+      context: ./flask
+      dockerfile: Dockerfile.dev
+    container_name: flask-app-dev
+    restart: always
+    ports:
+      - 5000:5000
+    env_file:
+      - ./flask/.env.dev
+    volumes:
+      - ./flask:/app
+    links:
+      - postgres
+    depends_on:
+      - postgres
+    networks:
+      - flask-network-dev
+
+  postgres:
+    image: postgres:12-alpine
+    container_name: flask-postgres-dev
+    volumes:
+      - ./postgres_data_dev:/var/lib/postgresql/data/
+    networks:
+      - flask-network-dev
+
+  adminer:
+    image: adminer
+    container_name: flask-adminer-dev
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - flask-network-dev
+
+volumes:
+  postgres_data_dev:
+
+networks:
+  flask-network-dev:
+      driver: bridge
